@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FormatQuote
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,18 +49,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun ProgPrincipal9() {
-    val urlBase = "https://json-placeholder.mock.beeceptor.com/"
-    val retrofit = Retrofit.Builder()
-        .baseUrl(urlBase)
+    val urlBasePosts = "https://json-placeholder.mock.beeceptor.com/"
+    val retrofitPosts = Retrofit.Builder()
+        .baseUrl(urlBasePosts)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-    val servicio = retrofit.create(PostApiService::class.java)
+    val servicioPosts = retrofitPosts.create(PostApiService::class.java)
+
+    val urlBaseQuotes = "https://dummyjson.com/"
+    val retrofitQuotes = Retrofit.Builder()
+        .baseUrl(urlBaseQuotes)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    val servicioQuotes = retrofitQuotes.create(QuoteApiService::class.java)
+
     val navController = rememberNavController()
 
     Scaffold(
         topBar = { BarraSuperior() },
         bottomBar = { BarraInferior(navController) },
-        content = { paddingValues -> Contenido(paddingValues, navController, servicio) }
+        content = { paddingValues -> Contenido(paddingValues, navController, servicioPosts, servicioQuotes) }
     )
 }
 
@@ -92,10 +101,16 @@ fun BarraInferior(navController: NavHostController) {
             onClick = { navController.navigate("inicio") }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Outlined.Favorite, contentDescription = "Posts") },
+            icon = { Icon(Icons.Outlined.FavoriteBorder, contentDescription = "Posts") },
             label = { Text("Posts") },
             selected = navController.currentDestination?.route == "posts",
             onClick = { navController.navigate("posts") }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Outlined.FormatQuote, contentDescription = "Quotes") },
+            label = { Text("Quotes") },
+            selected = navController.currentDestination?.route == "quotes",
+            onClick = { navController.navigate("quotes") }
         )
     }
 }
@@ -104,7 +119,8 @@ fun BarraInferior(navController: NavHostController) {
 fun Contenido(
     pv: PaddingValues,
     navController: NavHostController,
-    servicio: PostApiService
+    servicioPosts: PostApiService,
+    servicioQuotes: QuoteApiService
 ) {
     Box(
         modifier = Modifier
@@ -116,13 +132,14 @@ fun Contenido(
             startDestination = "inicio"
         ) {
             composable("inicio") { ScreenInicio() }
-            composable("posts") { ScreenPosts(navController, servicio) }
+            composable("posts") { ScreenPosts(navController, servicioPosts) }
             composable(
                 "postsVer/{id}",
                 arguments = listOf(navArgument("id") { type = NavType.IntType })
             ) {
-                ScreenPost(navController, servicio, it.arguments!!.getInt("id"))
+                ScreenPost(navController, servicioPosts, it.arguments!!.getInt("id"))
             }
+            composable("quotes") { ScreenQuotes(navController, servicioQuotes) }
         }
     }
 }
